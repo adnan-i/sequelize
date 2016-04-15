@@ -1,8 +1,40 @@
 # Future
-- [FIXED] Prevent race condition after transaction finished [#5222](https://github.com/sequelize/sequelize/issues/5222)
+- [FIXED] Fix defaultValues getting overwritten on build
 
-# Future
+# 3.21.0
+- [FIXED] Confirmed that values modified in validation hooks are preserved [#3534](https://github.com/sequelize/sequelize/issues/3534)
+- [FIXED] Support lower case type names in SQLite [#5482](https://github.com/sequelize/sequelize/issues/5482)
+- [FIXED] Support calling `setAssociation` twice on `hasOne` [#5315](https://github.com/sequelize/sequelize/issues/5315)
+- [INTERNALS] Removed dependency on wellknown in favor of terraformer-wkt-parser
+- [ADDED] Benchmarking feature [#2494](https://github.com/sequelize/sequelize/issues/2494)
+
+# 3.20.0
+- [ADDED] rejectOnEmpty mode [#272](https://github.com/sequelize/sequelize/issues/272) [#5480](https://github.com/sequelize/sequelize/issues/5480)
+- [ADDED] `beforeCount` hook [#5209](https://github.com/sequelize/sequelize/pull/5209)
+- [ADDED] `validationFailed` hook [#1626](https://github.com/sequelize/sequelize/issues/1626)
+- [ADDED] Support for IEEE floating point literals in postgres and sqlite [#5194](https://github.com/sequelize/sequelize/issues/5194)
+- [FIXED] `addColumn` with reference in mysql [#5592](https://github.com/sequelize/sequelize/issues/5592)
+- [FIXED] `findAndCountAll` generates invalid SQL, subQuery moves to LEFT OUTER JOIN [#5445](https://github.com/sequelize/sequelize/issues/5445)
+- [FIXED] `count` methods pollute the options.includes [#4191](https://github.com/sequelize/sequelize/issues/4191)
+- [FIXED] Invalid SQL generated when using group option along with attributes [#3009](https://github.com/sequelize/sequelize/issues/3009)
+- [FIXED] Mark index as `unique: true` when `type: 'UNIQUE'`. Fixes [#5351](https://github.com/sequelize/sequelize/issues/5351)
+- [FIXED] Improper escaping of bound arrays of strings on Postgres, SQLite, and Microsoft SQL Server
+
+# 3.19.3
+- [FIXED] `updatedAt` and `createdAt` values are now set before validation [#5367](https://github.com/sequelize/sequelize/pull/5367)
+- [FIXED] `describeTable` maintains proper enum casing in mysql [#5321](https://github.com/sequelize/sequelize/pull/5321)
+- [FIXED] Parsing of dates in MySQL, when a named timezone is used [#4208](https://github.com/sequelize/sequelize/issues/4208)
+- [FIXED] Truncating in Postgres, when table has a schema [#4306](https://github.com/sequelize/sequelize/issues/4306)
+- [FIXED] Moved initialization of scopes later in the model init process. Fixes attribute exclusion in scopes, [#4735](https://github.com/sequelize/sequelize/issues/4735) and [#4925](https://github.com/sequelize/sequelize/issues/4925)
+- [FIXED] Multiple custom unique validation messages being overwritten by the first-defined message, [#4920](https://github.com/sequelize/sequelize/issues/4920)
+
+# 3.19.0
+- [ADDED] Geography support for postgres
+- [FIXED] Migrations failed to add foreign key [#966](https://github.com/sequelize/sequelize/issues/966)
+- [FIXED] Prevent race condition after transaction finished [#5222](https://github.com/sequelize/sequelize/issues/5222)
 - [FIXED] Fixed Instance.reload issues ([#4844](https://github.com/sequelize/sequelize/issues/4844) and [#4452](https://github.com/sequelize/sequelize/issues/4452))
+- [FIXED] Fix upsert when primary key contains `.field` (internal API change for `queryInterface.upsert`) [#4755](https://github.com/sequelize/sequelize/issues/4755)
+- [FIXED] Default value for `defaultScope` is now an empty object. This fixes calling `.scope('defaultScope')` when no scope is explicitly defined, see [#5277](https://github.com/sequelize/sequelize/issues/5277)
 
 # 3.18.0
 - [ADDED] Support silent: true in bulk update [#5200](https://github.com/sequelize/sequelize/issues/5200)
