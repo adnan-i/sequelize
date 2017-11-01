@@ -1,43 +1,53 @@
 'use strict';
 
-var chai = require('chai')
-  , expect = chai.expect
-  , Support   = require(__dirname + '/support')
-  , DataTypes = require(__dirname + '/../../lib/data-types')
-  , Utils     = require(__dirname + '/../../lib/utils');
+const chai = require('chai');
+const expect = chai.expect;
+const Support = require(__dirname + '/support');
+const DataTypes = require(__dirname + '/../../lib/data-types');
+const Utils = require(__dirname + '/../../lib/utils');
+const tedious = require('tedious');
+const tediousIsolationLevel = tedious.ISOLATION_LEVEL;
 
-// Notice: [] will be replaced by dialect specific tick/quote character when there is not dialect specific expectation but only a default expectation
+suite(Support.getTestDialectTeaser('Utils'), () => {
+  suite('merge', () => {
+    test('does not clone sequelize models', () => {
+      const User = Support.sequelize.define('user');
+      const merged = Utils.merge({}, { include: [{model : User }]});
+      const merged2 = Utils.merge({}, { user: User });
 
-suite(Support.getTestDialectTeaser('Utils'), function() {
+      expect(merged.include[0].model).to.equal(User);
+      expect(merged2.user).to.equal(User);
+    });
+  });
 
-  suite('toDefaultValue', function () {
-    test('return plain data types', function () {
+  suite('toDefaultValue', () => {
+    test('return plain data types', () => {
       expect(Utils.toDefaultValue(DataTypes.UUIDV4)).to.equal('UUIDV4');
     });
-    test('return uuid v1', function () {
+    test('return uuid v1', () => {
       expect(/^[a-z0-9\-]{36}$/.test(Utils.toDefaultValue(DataTypes.UUIDV1()))).to.be.equal(true);
     });
-    test('return uuid v4', function () {
+    test('return uuid v4', () => {
       expect(/^[a-z0-9\-]{36}/.test(Utils.toDefaultValue(DataTypes.UUIDV4()))).to.be.equal(true);
     });
-    test('return now', function () {
+    test('return now', () => {
       expect(Object.prototype.toString.call(Utils.toDefaultValue(DataTypes.NOW()))).to.be.equal('[object Date]');
     });
-    test('return plain string', function () {
+    test('return plain string', () => {
       expect(Utils.toDefaultValue('Test')).to.equal('Test');
     });
-    test('return plain object', function () {
+    test('return plain object', () => {
       chai.assert.deepEqual({}, Utils.toDefaultValue({}));
     });
   });
 
-  suite('mapFinderOptions', function () {
-    test('virtual attribute dependencies', function () {
+  suite('mapFinderOptions', () => {
+    test('virtual attribute dependencies', () => {
       expect(Utils.mapFinderOptions({
         attributes: [
           'active'
         ]
-      }, this.sequelize.define('User', {
+      }, Support.sequelize.define('User', {
         createdAt: {
           type: DataTypes.DATE,
           field: 'created_at'
@@ -53,8 +63,8 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
       ]);
     });
 
-    test('multiple calls', function () {
-      var Model = this.sequelize.define('User', {
+    test('multiple calls', () => {
+      const Model = Support.sequelize.define('User', {
         createdAt: {
           type: DataTypes.DATE,
           field: 'created_at'
@@ -82,14 +92,14 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
     });
   });
 
-  suite('mapOptionFieldNames', function () {
-    test('plain where', function () {
+  suite('mapOptionFieldNames', () => {
+    test('plain where', () => {
       expect(Utils.mapOptionFieldNames({
         where: {
           firstName: 'Paul',
           lastName: 'Atreides'
         }
-      }, this.sequelize.define('User', {
+      }, Support.sequelize.define('User', {
         firstName: {
           type: DataTypes.STRING,
           field: 'first_name'
@@ -106,7 +116,7 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
       });
     });
 
-    test('$or where', function () {
+    test('$or where', () => {
       expect(Utils.mapOptionFieldNames({
         where: {
           $or: {
@@ -114,7 +124,7 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
             lastName: 'Atreides'
           }
         }
-      }, this.sequelize.define('User', {
+      }, Support.sequelize.define('User', {
         firstName: {
           type: DataTypes.STRING,
           field: 'first_name'
@@ -133,7 +143,7 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
       });
     });
 
-    test('$or[] where', function () {
+    test('$or[] where', () => {
       expect(Utils.mapOptionFieldNames({
         where: {
           $or: [
@@ -141,7 +151,7 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
             {lastName: 'Atreides'}
           ]
         }
-      }, this.sequelize.define('User', {
+      }, Support.sequelize.define('User', {
         firstName: {
           type: DataTypes.STRING,
           field: 'first_name'
@@ -160,7 +170,7 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
       });
     });
 
-    test('$and where', function () {
+    test('$and where', () => {
       expect(Utils.mapOptionFieldNames({
         where: {
           $and: {
@@ -168,7 +178,7 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
             lastName: 'Atreides'
           }
         }
-      }, this.sequelize.define('User', {
+      }, Support.sequelize.define('User', {
         firstName: {
           type: DataTypes.STRING,
           field: 'first_name'
@@ -188,9 +198,9 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
     });
   });
 
-  suite('stack', function() {
-    test('stack trace starts after call to Util.stack()', function this_here_test() {
-
+  suite('stack', () => {
+    test('stack trace starts after call to Util.stack()', function this_here_test() { // eslint-disable-line
+      // We need a named function to be able to capture its trace
       function a() {
         return b();
       }
@@ -203,7 +213,7 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
         return Utils.stack();
       }
 
-      var stack = a();
+      const stack = a();
 
       expect(stack[0].getFunctionName()).to.eql('c');
       expect(stack[1].getFunctionName()).to.eql('b');
@@ -212,20 +222,78 @@ suite(Support.getTestDialectTeaser('Utils'), function() {
     });
   });
 
-  suite('formatReferences', function () {
-    ([
-      [{referencesKey: 1}, {references: {model: undefined, key: 1, deferrable: undefined}, referencesKey: undefined, referencesDeferrable: undefined}],
-      [{references: 'a'}, {references: {model: 'a', key: undefined, deferrable: undefined}, referencesKey: undefined, referencesDeferrable: undefined}],
-      [{references: 'a', referencesKey: 1}, {references: {model: 'a', key: 1, deferrable: undefined}, referencesKey: undefined, referencesDeferrable: undefined}],
-      [{references: {model: 1}}, {references: {model: 1}}],
-      [{references: 1, referencesKey: 2, referencesDeferrable: 3}, {references: {model: 1, key: 2, deferrable: 3}, referencesKey: undefined, referencesDeferrable: undefined}]
-    ]).forEach(function (test) {
-      var input  = test[0];
-      var output = test[1];
+  suite('Sequelize.cast', () => {
+    const sql = Support.sequelize;
+    const generator = sql.queryInterface.QueryGenerator;
+    const run = generator.handleSequelizeMethod.bind(generator);
+    const expectsql = Support.expectsql;
 
-      it(JSON.stringify(input) + ' to ' + JSON.stringify(output), function () {
-        expect(Utils.formatReferences(input)).to.deep.equal(output);
+    test('accepts condition object (auto casting)', () => {
+      expectsql(run(sql.fn('SUM', sql.cast({
+        $or: {
+          foo: 'foo',
+          bar: 'bar'
+        }
+      }, 'int'))), {
+        default: 'SUM(CAST(([foo] = \'foo\' OR [bar] = \'bar\') AS INT))',
+        mssql: 'SUM(CAST(([foo] = N\'foo\' OR [bar] = N\'bar\') AS INT))'
       });
     });
   });
+
+  suite('Logger', () => {
+    const logger = Utils.getLogger();
+
+    test('deprecate', () => {
+      expect(logger.deprecate).to.be.function;
+      logger.deprecate('test deprecation');
+    });
+
+    test('debug', () => {
+      expect(logger.debug).to.be.function;
+      logger.debug('test debug');
+    });
+
+    test('warn', () => {
+      expect(logger.warn).to.be.function;
+      logger.warn('test warning');
+    });
+
+    test('debugContext',  () => {
+      expect(logger.debugContext).to.be.function;
+      const testLogger = logger.debugContext('test');
+
+      expect(testLogger).to.be.function;
+      expect(testLogger.namespace).to.be.eql('sequelize:test');
+    });
+  });
+
+  if (Support.getTestDialect() === 'mssql') {
+    suite('mapIsolationLevelStringToTedious', () => {
+      test('READ_UNCOMMITTED', () => {
+        expect(Utils.mapIsolationLevelStringToTedious('READ_UNCOMMITTED', tedious)).to.equal(tediousIsolationLevel.READ_UNCOMMITTED);
+      });
+
+      test('READ_COMMITTED', () => {
+        expect(Utils.mapIsolationLevelStringToTedious('READ_COMMITTED', tedious)).to.equal(tediousIsolationLevel.READ_COMMITTED);
+      });
+
+      test('REPEATABLE_READ', () => {
+        expect(Utils.mapIsolationLevelStringToTedious('REPEATABLE_READ', tedious)).to.equal(tediousIsolationLevel.REPEATABLE_READ);
+      });
+
+      test('SERIALIZABLE', () => {
+        expect(Utils.mapIsolationLevelStringToTedious('SERIALIZABLE', tedious)).to.equal(tediousIsolationLevel.SERIALIZABLE);
+      });
+
+      test('SNAPSHOT', () => {
+        expect(Utils.mapIsolationLevelStringToTedious('SNAPSHOT', tedious)).to.equal(tediousIsolationLevel.SNAPSHOT);
+      });
+
+      test('should throw error if tedious lib is not passed as a parameter', () => {
+        expect(Utils.mapIsolationLevelStringToTedious.bind(Utils, 'SNAPSHOT')).to.throw('An instance of tedious lib should be passed to this function');
+      });
+    });
+  }
+
 });
